@@ -7,7 +7,7 @@ All incoming transactions that occur on the TEMPO stellar network require KYC in
 
 Senders will have two options. The first one is to submit transactions using the Stellar Compliance Protocol which is described on the [stellar.org website](https://www.stellar.org/developers/guides/compliance-protocol.html)
 
-[GitHub Pages](https://pages.github.com/).
+
 
 
 
@@ -32,7 +32,24 @@ AUTH_SERVER="https://api.tempo.eu.com/auth"
 curl https://tempo.eu.com/.well-known/stellar.toml | grep AUTH_SERVER
 ```
 
-### Step 3 Generate KYC call
+### Step 3 Routing Call
+
+This step is optional if the 
+
+
+
+### Step 4 Routing Call
+
+
+Generate KYC call
+
+Assuming the sender and receiver are not registered on the TEMPO network you need to submit the appropriate paperwork.
+
+As TEMPO is a registered PSD licensed with the Bank of France this is required by our regulator for all transactions.
+
+If you have already submitted the kyc information you can just submit the memberid if you have it.
+
+
 
 
 

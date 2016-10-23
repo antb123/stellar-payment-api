@@ -17,9 +17,9 @@ You will need to read the file from our server
 
 [https://tempo.eu.com/.well-known/stellar.toml](https://tempo.eu.com/.well-known/stellar.toml)
 
-'''
+```
 curl https://tempo.eu.com/.well-known/stellar.toml
-'''
+```
 
 
 ### STEP 2 Read the Stellar AUTH_SERVER parameter
@@ -28,9 +28,9 @@ Read the AUTH_SERVER parameter
 
 AUTH_SERVER="https://api.tempo.eu.com/auth"
 
-'''
+```
 curl https://tempo.eu.com/.well-known/stellar.toml | grep AUTH_SERVER
-'''
+```
 
 ### Step 3 Generate KYC call
 

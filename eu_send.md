@@ -32,9 +32,53 @@ AUTH_SERVER="https://api.tempo.eu.com/auth"
 curl https://tempo.eu.com/.well-known/stellar.toml | grep AUTH_SERVER
 ```
 
-### Step 3 Routing Call
+### Step 3
 
-This step is optional if the 
+All transactions need to submit the sender information, recipeint info and some meta data regarding the actual transaction.
+
+Users are in the code member_id*tempo.eu.com
+
+The system needs to generate a post command with the following JSON
+
+
+{
+    "firstname": "Rizwan",
+    "lastname": "Azwan",
+    "nationality": "RU",
+    "address1": "123 St",
+    "address2": "",
+    "city": "Paris",
+    "postcode": "75306",
+    "country": "FR",
+    "email":"abcd@gmail.com",
+    "gender": "Male",
+    "dob": "1973-09-09",
+	"mobile": "+339696968699",
+	"callback":"http://www.test.com",
+    "occupation": "worker",
+    "annual_income": "10000", 
+	"id_details":"BAD876G567",
+	"id_type":"Passport",
+	"id_expiry":"2017-09-05",
+	"id1_scan":"image(base64_encoded)",
+	"id2_details":"BAD876G567",
+	"id2_type":"Residence permit",
+	"id2_expiry":"2017-09-05",
+	"id2_scan":"image(base64_encoded)",
+}
+
+# format notes
+nationality/country iso alpha2:
+https://en.wikipedia.org/wiki/ISO_3166-1_alpha
+gender: Male/Female
+mobile in E.164 fomat:
+https://en.wikipedia.org/wiki/E.164
+dob: iso 8601
+https://en.wikipedia.org/wiki/ISO_8601
+
+
+Option fields: address2, id2 is not required if id1 is a passport.
+
 
 
 

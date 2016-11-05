@@ -52,9 +52,10 @@ The system needs to generate a post command with the following JSON
     "country": "FR",
     "email":"abcd@gmail.com",
     "gender": "Male",
+    "country_of_birth": "FR",
     "dob": "1973-09-09",
-	"mobile": "+339696968699",
-	"callback":"http://www.test.com",
+    "mobile": "+339696968699",
+    "callback":"http://www.test.com",
     "occupation": "worker",
     "annual_income": "10000", 
 	"id_details":"BAD876G567",
@@ -72,13 +73,15 @@ The system needs to generate a post command with the following JSON
  https://en.wikipedia.org/wiki/ISO_3166-1_alpha
 * gender: Male/Female
 * mobile in E.164 fomat:
-https://en.wikipedia.org/wiki/E.164
+ https://en.wikipedia.org/wiki/E.164
 * dob: iso 8601
-https://en.wikipedia.org/wiki/ISO_8601
-
+ https://en.wikipedia.org/wiki/ISO_8601
+* ID1
+  Type: Passeport, National ID, EU ID, Titre de Sejour
 
 ##Optional fields: 
-* address2, id2 is not required if id1 is a passport.
+* address2
+* id2 fields are is not required if id1 is a passport.
 
 
 

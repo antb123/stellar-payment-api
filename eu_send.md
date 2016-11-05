@@ -77,7 +77,8 @@ The system needs to generate a post command with the following JSON
 * dob: iso 8601
  https://en.wikipedia.org/wiki/ISO_8601
 * ID1
-  Type: Passeport, National ID, EU ID, Titre de Sejour
+** Type: Passeport, National ID, EU ID, Titre de Sejour
+** Images should be at least 100Kb and good quality
 
 ##Optional fields: 
 * address2

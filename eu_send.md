@@ -69,12 +69,12 @@ The system needs to generate a post command with the following JSON
 ```
 # format notes
 * nationality/country iso alpha2:
-* https://en.wikipedia.org/wiki/ISO_3166-1_alpha
+ https://en.wikipedia.org/wiki/ISO_3166-1_alpha
 * gender: Male/Female
 * mobile in E.164 fomat:
-* https://en.wikipedia.org/wiki/E.164
+https://en.wikipedia.org/wiki/E.164
 * dob: iso 8601
-* https://en.wikipedia.org/wiki/ISO_8601
+https://en.wikipedia.org/wiki/ISO_8601
 
 
 ##Optional fields: 

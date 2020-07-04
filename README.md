@@ -14,6 +14,7 @@ the Stellar network.
     - [3.3. Trustline](#33-trustline)  
     - [3.4. Deposit](#34-deposit)  
     - [3.5. Withdrawal](#35-withdrawal)  
+* [4. Links](#4-links)
 
 ## 1. Domains
 
@@ -236,3 +237,9 @@ def sep6_withdrawal():
     response = requests.post(url, data=data, headers=headers).json()
     return render_sep6_instructions(response)  # display instructions to user
 ```
+
+## 4. Links
+
+* [Stellar Introduction](https://developers.stellar.org/docs/start/introduction/)
+* [SEP-24: Instructions for Wallets](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md#basic-wallet-implementation)
+* [SEP-6: Instructions for Wallets](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md#basic-wallet-implementation)

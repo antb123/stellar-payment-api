@@ -4,7 +4,7 @@ TEMPO is a Stellar Anchor and provides support for EUR deposits and withdrawals 
 the Stellar network.
 
 # Summary
-* [1. Getting started](#1-getting-started)
+* [1. Overview](#1-overview)
 * [2. Domains](#2-domains)  
     - [2.1. Public Network](#21-public-network)  
     - [2.2. Test Network](#22-test-network)  
@@ -17,7 +17,7 @@ the Stellar network.
     - [4.5. Withdrawal](#35-withdrawal)  
 * [5. Links](#5-links)
 
-## 1. Getting started
+## 1. Overview
 
 As a Stellar Anchor, TEMPO allows you to deposit and withdraw Euros using your
 Stellar account.  

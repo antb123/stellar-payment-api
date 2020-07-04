@@ -12,6 +12,8 @@ the Stellar network.
     - [3.1. Fetch stellar.toml](#31-fetch-stellartoml)  
     - [3.2. Get auth token](#32-get-auth-token)  
     - [3.3. Trustline](#33-trustline)  
+    - [3.4. Deposit](#34-deposit)  
+    - [3.5. Withdrawal](#35-withdrawal)  
 
 ## 1. Domains
 

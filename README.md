@@ -79,8 +79,6 @@ from stellar_sdk.transaction_envelope import TransactionEnvelope
 
 secret_key = 'SBYWIVPVH5PQPB...'
 
-auth_url = stellar_toml['WEB_AUTH_ENDPOINT']
-
 # get challenge transaction and sign it
 client_signing_key = Keypair.from_secret(secret_key)
 response = client.get(f'{auth_url}?account={client_signing_key.public_key}', follow=True)
@@ -94,7 +92,7 @@ client_signed_envelope_xdr = envelope_object.to_xdr()
 
 # submit the signed transaction to prove ownership of the account
 response = client.post(
-    f'{auth_url}/auth',
+    stellar_toml['WEB_AUTH_ENDPOINT'],
     data={"transaction": client_signed_envelope_xdr},
     content_type='application/json',
 )

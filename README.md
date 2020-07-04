@@ -241,5 +241,8 @@ def sep6_withdrawal():
 ## 4. Links
 
 * [Stellar Introduction](https://developers.stellar.org/docs/start/introduction/)
+* [Stellar Tools](https://www.stellar.org/developers/tools/)
 * [SEP-24: Instructions for Wallets](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md#basic-wallet-implementation)
 * [SEP-6: Instructions for Wallets](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md#basic-wallet-implementation)
+* [SEP-24 Demo Wallet](https://sep24.stellar.org)
+* [Anchor Validator](http://anchor-validator.stellar.org/)

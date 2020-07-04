@@ -4,21 +4,53 @@ TEMPO is a Stellar Anchor and provides support for EUR deposits and withdrawals 
 the Stellar network.
 
 # Summary
-* [1. Domains](#1-domains)  
-    - [1.1. Public Network](#11-public-network)  
-    - [1.2. Test Network](#12-test-network)  
-* [2. SEPs](#2-seps)  
-* [3. Integrating with TEMPO](#3-integrating-with-tempo)  
-    - [3.1. Fetch stellar.toml](#31-fetch-stellartoml)  
-    - [3.2. Get auth token](#32-get-auth-token)  
-    - [3.3. Trustline](#33-trustline)  
-    - [3.4. Deposit](#34-deposit)  
-    - [3.5. Withdrawal](#35-withdrawal)  
-* [4. Links](#4-links)
+* [1. Getting started](#1-getting-started)
+* [2. Domains](#2-domains)  
+    - [2.1. Public Network](#21-public-network)  
+    - [2.2. Test Network](#22-test-network)  
+* [3. SEPs](#3-seps)  
+* [4. Integrating with TEMPO](#4-integrating-with-tempo)  
+    - [4.1. Fetch stellar.toml](#41-fetch-stellartoml)  
+    - [4.2. Get auth token](#42-get-auth-token)  
+    - [4.3. Trustline](#43-trustline)  
+    - [4.4. Deposit](#44-deposit)  
+    - [4.5. Withdrawal](#35-withdrawal)  
+* [5. Links](#5-links)
 
-## 1. Domains
+## 1. Getting started
 
-### 1.1. Public Network
+As a Stellar Anchor, TEMPO allows you to deposit and withdraw Euros using your
+Stellar account.  
+The protocols which define how to deposit and withdraw are called SEPs.  
+Each SEP can be found in the [Stellar git repository](https://github.com/stellar/stellar-protocol/tree/master/ecosystem).
+The main focus of this document is to guide Wallets on how to manage deposits
+and withdrawals using TEMPO as the Anchor.  
+The relevant SEPs for this document are listed [below](#3-seps).
+
+Here are a few links to help you get started:
+* [Stellar Introduction](https://developers.stellar.org/docs/start/introduction/)
+* [Stellar Tools](https://www.stellar.org/developers/tools/)
+
+Overview of the steps to do a deposit or withdrawal using TEMPO:
+* Fetch stellar.toml
+  - The Wallet fetches the Anchor's `stellar.toml` file, which contains information
+    about currencies and URLs required by the SEPs
+* Create trustlines to the Anchor
+  - In order to hold assets issued by TEMPO, the Wallet must create a trustline to TEMPO
+    on each of its Stellar accounts. Otherwise the accounts won't be able to receive the deposits.
+* Create a deposit or withdrawal transaction using [SEP-6](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md) or [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md)
+  - The main difference between SEP-6 and SEP-24 is that SEP-6 requires the Wallet
+    to collect all required fields from the user and submit them non-interactively to the Anchor.
+    In SEP-24, the Anchor interactively collects all the information it needs from the user.
+  - It's up to the Wallet to decide to use SEP-6 or SEP-24 to manage transactions.
+
+Stellar has two networks: testnet and public.  
+TEMPO operates on both networks, and the domains are listed [below](#2-domains).  
+More details on how to integrate with TEMPO are found [below](#3-integrating-with-tempo).
+
+## 2. Domains
+
+### 2.1. Public Network
 
 Domain:  
 `https://k.tempocrypto.com`
@@ -29,7 +61,7 @@ Assets:
 *fiat* assets represent currencies in the real world (EUR, USD) and can be
  deposited/withdrawn directly to bank accounts.
 
-### 1.2. Test Network
+### 2.2. Test Network
 
 Domain:  
 `https://ktest.tempocrypto.com`
@@ -37,7 +69,7 @@ Domain:
 Assets:
 * PURPLE
 
-## 2. SEPs
+## 3. SEPs
 
 * [SEP-1](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0001.md): fully compliant
 * [SEP-2](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0002.md): not supported
@@ -48,13 +80,13 @@ Assets:
 Notes:
 * SEP-6 can only be used after user document verification (KYC), either through SEP-24 or manual approval
 
-## 3. Integrating with TEMPO
+## 4. Integrating with TEMPO
 
-### 3.1. Fetch stellar.toml
-`stellar.toml` provides these variables, which are required for [SEP-6](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md) and [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md):
+### 4.1. Fetch stellar.toml
+`stellar.toml` provides these variables, which are required for SEP-10, SEP-6 and SEP-24 respectively:
+  - `WEB_AUTH_ENDPOINT`
   - `TRANSFER_SERVER`
   - `TRANSFER_SERVER_SEP0024`
-  - `WEB_AUTH_ENDPOINT`
 
 Python example on how to fetch TEMPO's testnet `stellar.toml`:
 ```python
@@ -64,7 +96,7 @@ import toml
 stellar_toml = toml.loads(requests.get('https://ktest.tempocrypto.com/.well-known/stellar.toml').text)
 ```
 
-### 3.2. Get auth token
+### 4.2. Get auth token
 
 [SEP-10](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0010.md) provides a mechanism to
 prove ownership of a Stellar account and obtain a reusable JWT token which carries the ownership information.  
@@ -101,7 +133,7 @@ content = json.loads(response.content)
 sep10_token = content['token']
 ```
 
-### 3.3. Trustline
+### 4.3. Trustline
 
 To deposit assets into a Stellar account, the account must first trust the asset.  
 A trustline operation is required only once and the trust will last forever on the account unless removed.  
@@ -127,7 +159,7 @@ response = server.submit_transaction(envelope)
 assert response['successful']
 ```
 
-### 3.4. Deposit
+### 4.4. Deposit
 
 Deposits are a way for users to deposit real world currencies (ex: USD, EUR) into their Stellar account (usually managed by a Wallet).  
 For example, a user can have EUR on a bank account outside Stellar, and deposit that as EURT into a Stellar account.  
@@ -182,7 +214,7 @@ def sep6_deposit():
     return render_sep6_instructions(response)  # display instructions to user
 ```
 
-### 3.5. Withdrawal
+### 4.5. Withdrawal
 
 Withdrawals are a way for users to obtain assets from their Stellar account as real world currencies (ex: USD, EUR).  
 For example, a user can have EURT balance in a Stellar account and withdraw that as EUR, receiving the EUR on a bank account outside Stellar.  
@@ -236,11 +268,10 @@ def sep6_withdrawal():
     return render_sep6_instructions(response)  # display instructions to user
 ```
 
-## 4. Links
+## 5. Links
 
-* [Stellar Introduction](https://developers.stellar.org/docs/start/introduction/)
-* [Stellar Tools](https://www.stellar.org/developers/tools/)
 * [SEP-24: Instructions for Wallets](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md#basic-wallet-implementation)
 * [SEP-6: Instructions for Wallets](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md#basic-wallet-implementation)
+
 * [SEP-24 Demo Wallet](https://sep24.stellar.org)
 * [Anchor Validator](http://anchor-validator.stellar.org/)

@@ -1,1 +1,7 @@
-/local_settings.py
+/.venv/
+/tags
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py

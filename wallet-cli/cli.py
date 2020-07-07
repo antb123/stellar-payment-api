@@ -9,9 +9,6 @@ import sep24
 from settings import ASSET, PUBKEY
 
 
-SECRET = None
-TOML = None
-
 parsers = {}
 
 

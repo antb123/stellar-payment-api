@@ -16,6 +16,7 @@ the Stellar network.
     - [4.4. Deposit](#44-deposit)  
     - [4.5. Withdrawal](#35-withdrawal)  
 * [5. Links](#5-links)
+* [6. Wallet CLI](#6-wallet-cli)
 
 ## 1. Overview
 
@@ -277,3 +278,52 @@ def sep6_withdrawal():
 
 * [SEP-24 Demo Wallet](https://sep24.stellar.org)
 * [Anchor Validator](http://anchor-validator.stellar.org/)
+
+## 6. Wallet CLI
+
+This repository contains a CLI Stellar wallet implementation for demonstration purposes.  
+
+### 6.1. Requirements
+
+* Python3.6+
+* pip3
+
+### 6.2. Dependencies
+
+```
+cd wallet-cli
+python3 -m pip install virtualenv
+python3 -m virtualenv .venv
+```
+
+### 6.3. Running
+
+Activate virtualenv (required only once for a terminal session):
+```
+source .venv/bin/activate
+```
+
+Create the database:
+```
+python cli.py database create
+```
+
+Get started by looking at the options:
+```
+python cli.py --help
+```
+
+Examples:
+```
+# SEP-1
+python cli.py sep1 fetch_stellar_toml
+
+# Trust
+python cli.py trust change_trust
+
+# SEP-10
+python cli.py sep10 auth
+
+# See SEP-24 options
+python cli.py sep24 --help
+```

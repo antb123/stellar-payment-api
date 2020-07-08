@@ -16,6 +16,7 @@ the Stellar network.
     - [4.4. Deposit](#44-deposit)  
     - [4.5. Withdrawal](#35-withdrawal)  
 * [5. Links](#5-links)
+* [6. Wallet CLI](#6-wallet-cli)
 
 ## 1. Overview
 
@@ -108,25 +109,27 @@ Python example (based on [Django Polaris code](https://github.com/stellar/django
 ```python
 from stellar_sdk.keypair import Keypair
 from stellar_sdk.transaction_envelope import TransactionEnvelope
+from stellar_sdk.network import Network
 
 secret_key = 'SBYWIVPVH5PQPB...'
 
+auth_url = stellar_toml['WEB_AUTH_ENDPOINT']
+
 # get challenge transaction and sign it
 client_signing_key = Keypair.from_secret(secret_key)
-response = client.get(f'{auth_url}?account={client_signing_key.public_key}', follow=True)
+response = requests.get(f'{auth_url}?account={client_signing_key.public_key}')
 content = json.loads(response.content)
 envelope_xdr = content['transaction']
 envelope_object = TransactionEnvelope.from_xdr(
-    envelope_xdr, network_passphrase=settings.STELLAR_NETWORK_PASSPHRASE
+    envelope_xdr, network_passphrase=Network.TESTNET_NETWORK_PASSPHRASE
 )
 envelope_object.sign(client_signing_key)
 client_signed_envelope_xdr = envelope_object.to_xdr()
 
 # submit the signed transaction to prove ownership of the account
-response = client.post(
-    stellar_toml['WEB_AUTH_ENDPOINT'],
-    data={"transaction": client_signed_envelope_xdr},
-    content_type='application/json',
+response = requests.post(
+    auth_url,
+    json={"transaction": client_signed_envelope_xdr},
 )
 content = json.loads(response.content)
 
@@ -140,7 +143,7 @@ A trustline operation is required only once and the trust will last forever on t
 Python example on how to trust TEMPO's PURPLE asset (used for testnet transactions):
 ```python
 from stellar_sdk.server import Server
-from stellar_sdk.network import Network
+from stellar_sdk.transaction_builder import TransactionBuilder
 
 secret_key = 'SBYWIVPV...'
 horizon_testnet = 'https://horizon-testnet.stellar.org/'
@@ -186,7 +189,7 @@ def sep24_deposit():
     headers = {
         'Authorization': 'Bearer ' + sep10_token
     }
-    url = stellar_toml['TRANSFER_SERVER_SEP0024'] + '/t1/transactions/deposit/interactive'
+    url = stellar_toml['TRANSFER_SERVER_SEP0024'] + '/transactions/deposit/interactive'
     response = requests.post(url, data=data, headers=headers).json()
     return render_sep24_interactive(response['url'])  # popup window on the client
 ```
@@ -209,7 +212,7 @@ def sep6_deposit():
     headers = {
         'Authorization': 'Bearer ' + sep10_token
     }
-    url = stellar_toml['TRANSFER_SERVER'] + '/sep6/deposit'
+    url = stellar_toml['TRANSFER_SERVER'] + '/deposit'
     response = requests.post(url, data=data, headers=headers).json()
     return render_sep6_instructions(response)  # display instructions to user
 ```
@@ -240,7 +243,7 @@ def sep24_withdrawal():
     headers = {
         'Authorization': 'Bearer ' + sep10_token
     }
-    url = stellar_toml['TRANSFER_SERVER_SEP0024'] + '/t1/transactions/withdraw/interactive'
+    url = stellar_toml['TRANSFER_SERVER_SEP0024'] + '/transactions/withdraw/interactive'
     response = requests.post(url, data=data, headers=headers).json()
     return render_sep24_interactive(response['url'])  # popup window on the client
 ```
@@ -263,7 +266,7 @@ def sep6_withdrawal():
     headers = {
         'Authorization': 'Bearer ' + sep10_token
     }
-    url = stellar_toml['TRANSFER_SERVER'] + '/sep6/withdraw'
+    url = stellar_toml['TRANSFER_SERVER'] + '/withdraw'
     response = requests.post(url, data=data, headers=headers).json()
     return render_sep6_instructions(response)  # display instructions to user
 ```
@@ -275,3 +278,52 @@ def sep6_withdrawal():
 
 * [SEP-24 Demo Wallet](https://sep24.stellar.org)
 * [Anchor Validator](http://anchor-validator.stellar.org/)
+
+## 6. Wallet CLI
+
+This repository contains a CLI Stellar wallet implementation for demonstration purposes.  
+
+### 6.1. Requirements
+
+* Python3.6+
+* pip3
+
+### 6.2. Dependencies
+
+```
+cd wallet-cli
+python3 -m pip install virtualenv
+python3 -m virtualenv .venv
+```
+
+### 6.3. Running
+
+Activate virtualenv (required only once for a terminal session):
+```
+source .venv/bin/activate
+```
+
+Create the database:
+```
+python cli.py database create
+```
+
+Get started by looking at the options:
+```
+python cli.py --help
+```
+
+Examples:
+```
+# SEP-1
+python cli.py sep1 fetch_stellar_toml
+
+# Trust
+python cli.py trust change_trust
+
+# SEP-10
+python cli.py sep10 auth
+
+# See SEP-24 options
+python cli.py sep24 --help
+```

@@ -30,7 +30,15 @@ The relevant SEPs for this document are listed [below](#3-seps).
 
 Here are a few links to help you get started:
 * [Stellar Introduction](https://developers.stellar.org/docs/start/introduction/)
-* [Stellar Tools](https://www.stellar.org/developers/tools/)
+* [Stellar Tools](https://developers.stellar.org/docs/software-and-sdks/)
+* [Sep24 testing tool](http://sep24.stellar.org/)
+* [Stellar Awesome links](https://github.com/koltenb/awesome-stellar)
+* [Javascript tutorial](https://blog.abuiles.com/building-your-own-venmo-with-stellar/)
+* [Validate EURT is working](https://anchor-validator.stellar.org/?home_domain=k.tempocrypto.com&currency=EURT&mainnet=true&project=SEP24)
+
+
+
+
 
 Overview of the steps to do a deposit or withdrawal using TEMPO:
 * Fetch stellar.toml

@@ -1,11 +1,11 @@
+import os
+from pathlib import Path
+from stellar_sdk.keypair import Keypair
 from stellar_sdk.network import Network
 from stellar_sdk.server import Server
 
-
-STELLAR_NETWORK = 'TESTNET'
-
-PUBKEY = ''
-SECRET = ''
+DATABASE_NAME = 'database.bin'
+DATABASE_PATH = os.path.join(Path(__file__).parent.absolute(), DATABASE_NAME)
 
 TEMPO_DOMAINS = {
     'TESTNET': 'https://ktest.tempocrypto.com',
@@ -23,12 +23,12 @@ ASSETS = {
     },
 }
 
-try:
-    from local_settings import *
-except ImportError as e:
-    pass
+def init(stellar_network, secret):
+    globals()['STELLAR_NETWORK'] = stellar_network
+    globals()['TEMPO_DOMAIN'] = TEMPO_DOMAINS[stellar_network]
+    globals()['NETWORK_PASSPHRASE'] = Network.TESTNET_NETWORK_PASSPHRASE if stellar_network == 'TESTNET' else Network.PUBLIC_NETWORK_PASSPHRASE
+    globals()['HORIZON_SERVER'] = Server(horizon_url='https://horizon-testnet.stellar.org/') if stellar_network == 'TESTNET' else Server(horizon_url='https://horizon.stellar.org/')
+    globals()['ASSET'] = ASSETS['PURPLE'] if stellar_network == 'TESTNET' else ASSETS['EURT']
 
-TEMPO_DOMAIN = TEMPO_DOMAINS[STELLAR_NETWORK]
-NETWORK_PASSPHRASE = Network.TESTNET_NETWORK_PASSPHRASE if STELLAR_NETWORK == 'TESTNET' else Network.PUBLIC_NETWORK_PASSPHRASE
-HORIZON_SERVER = Server(horizon_url='https://horizon-testnet.stellar.org/') if STELLAR_NETWORK == 'TESTNET' else Server(horizon_url='https://horizon.stellar.org/')
-ASSET = ASSETS['PURPLE'] if STELLAR_NETWORK == 'TESTNET' else ASSETS['EURT']
+    globals()['SECRET'] = secret
+    globals()['PUBKEY'] = Keypair.from_secret(secret).public_key

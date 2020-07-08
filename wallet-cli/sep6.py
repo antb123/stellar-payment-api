@@ -1,7 +1,7 @@
 import requests
 from urllib.parse import urljoin
-from sep10 import auth
 from sep1 import fetch_stellar_toml
+from sep10 import auth
 
 
 def _headers(token):

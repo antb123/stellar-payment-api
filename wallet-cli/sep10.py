@@ -3,7 +3,7 @@ import requests
 from stellar_sdk.keypair import Keypair
 from stellar_sdk.transaction_envelope import TransactionEnvelope
 from sep1 import fetch_stellar_toml
-from settings import SECRET, NETWORK_PASSPHRASE
+import settings
 
 
 def auth():
@@ -11,12 +11,12 @@ def auth():
     auth_url = stellar_toml['WEB_AUTH_ENDPOINT']
 
     # get challenge transaction and sign it
-    client_signing_key = Keypair.from_secret(SECRET)
+    client_signing_key = Keypair.from_secret(settings.SECRET)
     response = requests.get(f'{auth_url}?account={client_signing_key.public_key}')
     content = json.loads(response.content)
     envelope_xdr = content['transaction']
     envelope_object = TransactionEnvelope.from_xdr(
-        envelope_xdr, network_passphrase=NETWORK_PASSPHRASE
+        envelope_xdr, network_passphrase=settings.NETWORK_PASSPHRASE
     )
     envelope_object.sign(client_signing_key)
     client_signed_envelope_xdr = envelope_object.to_xdr()

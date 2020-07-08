@@ -7,6 +7,7 @@ python3 -m pip install virtualenv
 python3 -m virtualenv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+# add your local settings to local_settings.py
 
 2) Running
 
@@ -14,57 +15,78 @@ python cli.py --help
 
 """
 import argparse
+from getpass import getpass
 import json
+import os
 import sys
+
+from stellar_sdk.exceptions import Ed25519SecretSeedInvalidError
+from stellar_sdk.keypair import Keypair
+from termcolor import colored, cprint
+
+import database
 import sep1
 import trust
 import sep6
 import sep10
 import sep24
-from settings import ASSET, PUBKEY
+import settings
 
 
-parsers = {}
+PARSERS = {}
+DATA = {}
 
 
 def argparser():
     parser = argparse.ArgumentParser(description='TEMPO Stellar CLI Example')
     option_subparsers = parser.add_subparsers(help='option', dest='_option')
 
+    def add_database_parser():
+        database_parser = option_subparsers.add_parser('database')
+        PARSERS['database'] = {}
+        PARSERS['database']['_'] = database_parser
+        database_subparsers = database_parser.add_subparsers(description='operations', dest='_operation')
+
+        create_parser = database_subparsers.add_parser('create')
+        PARSERS['database']['create'] = create_parser
+
+        delete_parser = database_subparsers.add_parser('delete')
+        PARSERS['database']['delete'] = delete_parser
+
     def add_sep1_parser():
         sep1_parser = option_subparsers.add_parser('sep1')
-        parsers['sep1'] = {}
-        parsers['sep1']['_'] = sep1_parser
+        PARSERS['sep1'] = {}
+        PARSERS['sep1']['_'] = sep1_parser
         sep1_subparsers = sep1_parser.add_subparsers(description='operations', dest='_operation')
         fetch_stellar_toml_parser = sep1_subparsers.add_parser('fetch_stellar_toml')
-        parsers['sep1']['fetch_stellar_toml'] = fetch_stellar_toml_parser
+        PARSERS['sep1']['fetch_stellar_toml'] = fetch_stellar_toml_parser
 
     def add_trust_parser():
         trust_parser = option_subparsers.add_parser('trust')
-        parsers['trust'] = {}
-        parsers['trust']['_'] = trust_parser
+        PARSERS['trust'] = {}
+        PARSERS['trust']['_'] = trust_parser
         trust_subparsers = trust_parser.add_subparsers(description='operations', dest='_operation')
         change_trust_parser = trust_subparsers.add_parser('change_trust')
         change_trust_parser.add_argument('--asset-code')
         change_trust_parser.add_argument('--issuer')
         change_trust_parser.add_argument('--limit')
-        parsers['trust']['change_trust'] = change_trust_parser
+        PARSERS['trust']['change_trust'] = change_trust_parser
 
     def add_sep6_parser():
         sep6_parser = option_subparsers.add_parser('sep6')
-        parsers['sep6'] = {}
-        parsers['sep6']['_'] = sep6_parser
+        PARSERS['sep6'] = {}
+        PARSERS['sep6']['_'] = sep6_parser
         sep6_subparsers = sep6_parser.add_subparsers(description='operations', dest='_operation')
 
         info_parser = sep6_subparsers.add_parser('info')
-        parsers['sep6']['info'] = info_parser
+        PARSERS['sep6']['info'] = info_parser
 
         fee_parser = sep6_subparsers.add_parser('fee')
         fee_parser.add_argument('--operation', required=True)
         fee_parser.add_argument('--amount', required=True)
         fee_parser.add_argument('--asset-code')
         fee_parser.add_argument('--type')
-        parsers['sep6']['fee'] = fee_parser
+        PARSERS['sep6']['fee'] = fee_parser
 
         deposit_parser = sep6_subparsers.add_parser('deposit')
         deposit_parser.add_argument('--first-name', required=True)
@@ -81,7 +103,7 @@ def argparser():
         deposit_parser.add_argument('--lang')
         deposit_parser.add_argument('--partner-ref')
         deposit_parser.add_argument('--token', help='SEP10 auth token')
-        parsers['sep6']['deposit'] = deposit_parser
+        PARSERS['sep6']['deposit'] = deposit_parser
 
         withdraw_parser = sep6_subparsers.add_parser('withdraw')
         withdraw_parser.add_argument('--amount', required=True)
@@ -103,14 +125,14 @@ def argparser():
         withdraw_parser.add_argument('--benef-phone-number')
         withdraw_parser.add_argument('--external-memo')
         withdraw_parser.add_argument('--token', help='SEP10 auth token')
-        parsers['sep6']['withdraw'] = withdraw_parser
+        PARSERS['sep6']['withdraw'] = withdraw_parser
 
         transaction_parser = sep6_subparsers.add_parser('transaction')
         transaction_parser.add_argument('--id')
         transaction_parser.add_argument('--stellar-transaction-id')
         transaction_parser.add_argument('--external-transaction-id')
         transaction_parser.add_argument('--token', help='SEP10 auth token')
-        parsers['sep6']['transaction'] = transaction_parser
+        PARSERS['sep6']['transaction'] = transaction_parser
 
         transactions_parser = sep6_subparsers.add_parser('transactions')
         transactions_parser.add_argument('--asset-code')
@@ -119,31 +141,31 @@ def argparser():
         transactions_parser.add_argument('--kind')
         transactions_parser.add_argument('--paging-id')
         transactions_parser.add_argument('--token', help='SEP10 auth token')
-        parsers['sep6']['transactions'] = transactions_parser
+        PARSERS['sep6']['transactions'] = transactions_parser
 
     def add_sep10_parser():
         sep10_parser = option_subparsers.add_parser('sep10')
-        parsers['sep10'] = {}
-        parsers['sep10']['_'] = sep10_parser
+        PARSERS['sep10'] = {}
+        PARSERS['sep10']['_'] = sep10_parser
         sep10_subparsers = sep10_parser.add_subparsers(description='operations', dest='_operation')
         auth_parser = sep10_subparsers.add_parser('auth')
-        parsers['sep10']['auth'] = auth_parser
+        PARSERS['sep10']['auth'] = auth_parser
 
     def add_sep24_parser():
         sep24_parser = option_subparsers.add_parser('sep24')
-        parsers['sep24'] = {}
-        parsers['sep24']['_'] = sep24_parser
+        PARSERS['sep24'] = {}
+        PARSERS['sep24']['_'] = sep24_parser
         sep24_subparsers = sep24_parser.add_subparsers(description='operations', dest='_operation')
 
         info_parser = sep24_subparsers.add_parser('info')
-        parsers['sep24']['info'] = info_parser
+        PARSERS['sep24']['info'] = info_parser
 
         fee_parser = sep24_subparsers.add_parser('fee')
         fee_parser.add_argument('--operation', required=True)
         fee_parser.add_argument('--amount', required=True)
         fee_parser.add_argument('--asset-code')
         fee_parser.add_argument('--type')
-        parsers['sep24']['fee'] = fee_parser
+        PARSERS['sep24']['fee'] = fee_parser
 
         deposit_parser = sep24_subparsers.add_parser('deposit')
         deposit_parser.add_argument('--account')
@@ -156,7 +178,7 @@ def argparser():
         deposit_parser.add_argument('--wallet-url')
         deposit_parser.add_argument('--lang')
         deposit_parser.add_argument('--token', help='SEP10 auth token')
-        parsers['sep24']['deposit'] = deposit_parser
+        PARSERS['sep24']['deposit'] = deposit_parser
 
         withdraw_parser = sep24_subparsers.add_parser('withdraw')
         withdraw_parser.add_argument('--asset-code')
@@ -169,14 +191,14 @@ def argparser():
         withdraw_parser.add_argument('--wallet-url')
         withdraw_parser.add_argument('--lang')
         withdraw_parser.add_argument('--token', help='SEP10 auth token')
-        parsers['sep24']['withdraw'] = withdraw_parser
+        PARSERS['sep24']['withdraw'] = withdraw_parser
 
         transaction_parser = sep24_subparsers.add_parser('transaction')
         transaction_parser.add_argument('--id')
         transaction_parser.add_argument('--stellar-transaction-id')
         transaction_parser.add_argument('--external-transaction-id')
         transaction_parser.add_argument('--token', help='SEP10 auth token')
-        parsers['sep24']['transaction'] = transaction_parser
+        PARSERS['sep24']['transaction'] = transaction_parser
 
         transactions_parser = sep24_subparsers.add_parser('transactions')
         transactions_parser.add_argument('--asset-code')
@@ -185,8 +207,9 @@ def argparser():
         transactions_parser.add_argument('--kind')
         transactions_parser.add_argument('--paging-id')
         transactions_parser.add_argument('--token', help='SEP10 auth token')
-        parsers['sep24']['transactions'] = transactions_parser
+        PARSERS['sep24']['transactions'] = transactions_parser
 
+    add_database_parser()
     add_sep1_parser()
     add_trust_parser()
     add_sep6_parser()
@@ -196,8 +219,30 @@ def argparser():
     return parser
 
 
+def load_database():
+    global DATA
+    pw = getpass(magenta('Database password: '))
+    DATA = database.read(pw)
+    settings.init(DATA['stellar_network'], DATA['secret'])
+
+
 def pp(obj):
     print(json.dumps(obj, indent=2))
+
+
+def print_red(message):
+    cprint(message, 'red', attrs=['bold'])
+
+
+def magenta(message):
+    return colored(message, 'magenta', attrs=['bold'])
+
+
+def error(message, parser=None):
+    if parser is not None:
+        print(parser.format_help())
+    print_red(message)
+    sys.exit(1)
 
 
 def main():
@@ -205,13 +250,68 @@ def main():
     args = parser.parse_args()
 
     if not args._option:
-        print('No option provided')
-        print(parser.format_help())
-        sys.exit(1)
+        error('No option provided')
     if not args._operation:
-        print('No operation provided')
-        print(parsers[args._option]['_'].format_help())
-        sys.exit(1)
+        error('No operation provided', PARSERS[args._option]['_'])
+
+    if args._option == 'database':
+        if args._operation == 'create':
+            print('The database is an encrypted file named '
+                  + colored(settings.DATABASE_NAME, 'yellow', attrs=['bold']) + ', and it\'s'
+                  ' used to store these values:')
+            print('- Stellar account secret key')
+            print('- Stellar network')
+            print('The database password and Stellar secret key will not be displayed'
+                  ' on the screen while you type them.')
+            while True:
+                pw = getpass(magenta('New database password: '))
+                confirm_pw = getpass(magenta('Repeat new database password: '))
+                if pw != confirm_pw:
+                    print_red('Passwords mismatch')
+                    continue
+                break
+            while True:
+                secret = getpass(colored('Stellar account secret key: ', 'magenta', attrs=['bold']))
+                try:
+                    Keypair.from_secret(secret)
+                except Ed25519SecretSeedInvalidError:
+                    print_red('Invalid secret key')
+                    continue
+                break
+            while True:
+                print('Stellar network options:')
+                print(' 1 - TESTNET')
+                print(' 2 - PUBLIC')
+                answer = input('Stellar network (default = 1): ').strip()
+                if not answer or answer == '1':
+                    stellar_network = 'TESTNET'
+                elif answer == '2':
+                    stellar_network = 'PUBLIC'
+                else:
+                    print_red('Invalid option')
+                    continue
+                break
+
+            DATA['secret'] = secret
+            DATA['stellar_network'] = stellar_network
+            database.write(pw, DATA)
+
+        elif args._operation == 'delete':
+            try:
+                os.remove(settings.DATABASE_PATH)
+            except FileNotFoundError:
+                print_red('Database file does not exist')
+    else:
+        if os.path.isfile(settings.DATABASE_PATH):
+            try:
+                load_database()
+            except ValueError:
+                error('Password is incorrect or database is corrupted')
+        else:
+            print(colored('Database file does not exist. Use the following command to create it:', 'yellow'))
+            print()
+            print(colored('python cli.py database create', 'yellow'))
+            sys.exit(1)
 
     if args._option == 'sep1':
         if args._operation == 'fetch_stellar_toml':
@@ -219,8 +319,8 @@ def main():
 
     elif args._option == 'trust':
         if args._operation == 'change_trust':
-            pp(trust.change_trust(args.asset_code or ASSET['code'],
-                                  args.issuer or ASSET['issuer'],
+            pp(trust.change_trust(args.asset_code or settings.ASSET['code'],
+                                  args.issuer or settings.ASSET['issuer'],
                                   args.limit))
 
     elif args._option == 'sep10':
@@ -234,7 +334,7 @@ def main():
         elif args._operation == 'fee':
             params = {
                 'operation': args.operation,
-                'asset_code': args.asset_code or ASSET['code'],
+                'asset_code': args.asset_code or settings.ASSET['code'],
                 'amount': args.amount,
             }
             if args.type:
@@ -243,8 +343,8 @@ def main():
 
         elif args._operation == 'deposit':
             params = {
-                'asset_code': args.asset_code or ASSET['code'],
-                'account': args.account or PUBKEY,
+                'asset_code': args.asset_code or settings.ASSET['code'],
+                'account': args.account or settings.PUBKEY,
                 'first_name': args.first_name,
                 'last_name': args.last_name,
                 'email_address': args.email_address,
@@ -269,7 +369,7 @@ def main():
 
         elif args._operation == 'withdraw':
             params = {
-                'asset_code': args.asset_code or ASSET['code'],
+                'asset_code': args.asset_code or settings.ASSET['code'],
                 'amount': args.amount,
                 'type': args.type,
                 'dest_country': args.dest_country,
@@ -281,13 +381,9 @@ def main():
             }
             if params['type'] == 'sepa':
                 if not args.bank_bic:
-                    print('Missing required argument --bank-bic')
-                    print(parsers['sep6']['withdraw'].format_help())
-                    sys.exit(1)
+                    error('Missing required argument --bank-bic', parsers['sep6']['withdraw'])
                 if not args.dest:
-                    print('Missing required argument --dest')
-                    print(parsers['sep6']['withdraw'].format_help())
-                    sys.exit(1)
+                    error('Missing required argument --dest', parsers['sep6']['withdraw'])
             if args.bank_bic:
                 params['bank_bic'] = args.bank_bic
             if args.dest:
@@ -318,15 +414,13 @@ def main():
             if args.external_transaction_id:
                 params['external_transaction_id'] = args.external_transaction_id
             if not params:
-                print('An argument is required')
-                print(parsers['sep6']['transaction'].format_help())
-                sys.exit(1)
+                error('An argument is required', parsers['sep6']['transaction'])
 
             pp(sep6.transaction(params, args.token))
 
         elif args._operation == 'transactions':
             params = {
-                'asset_code': args.asset_code or ASSET['code'],
+                'asset_code': args.asset_code or settings.ASSET['code'],
             }
             if args.no_older_than:
                 params['no_older_than'] = args.no_older_than
@@ -346,7 +440,7 @@ def main():
         elif args._operation == 'fee':
             params = {
                 'operation': args.operation,
-                'asset_code': args.asset_code or ASSET['code'],
+                'asset_code': args.asset_code or settings.ASSET['code'],
                 'amount': args.amount,
             }
             if args.type:
@@ -355,8 +449,8 @@ def main():
 
         elif args._operation == 'deposit':
             params = {
-                'asset_code': args.asset_code or ASSET['code'],
-                'account': args.account or PUBKEY,
+                'asset_code': args.asset_code or settings.ASSET['code'],
+                'account': args.account or settings.PUBKEY,
             }
             if args.asset_issuer:
                 params['asset_issuer'] = args.asser_issuer
@@ -377,7 +471,7 @@ def main():
 
         elif args._operation == 'withdraw':
             params = {
-                'asset_code': args.asset_code or ASSET['code']
+                'asset_code': args.asset_code or settings.ASSET['code']
             }
             if args.asset_issuer:
                 params['asset_issuer'] = args.asset_issuer
@@ -407,15 +501,13 @@ def main():
             if args.external_transaction_id:
                 params['external_transaction_id'] = args.external_transaction_id
             if not params:
-                print('An argument is required')
-                print(parsers['sep24']['transaction'].format_help())
-                sys.exit(1)
+                error('An argument is required', parsers['sep24']['transaction'])
 
             pp(sep24.transaction(params, args.token))
 
         elif args._operation == 'transactions':
             params = {
-                'asset_code': args.asset_code or ASSET['code'],
+                'asset_code': args.asset_code or settings.ASSET['code'],
             }
             if args.no_older_than:
                 params['no_older_than'] = args.no_older_than

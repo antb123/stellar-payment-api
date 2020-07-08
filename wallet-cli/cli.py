@@ -1,3 +1,18 @@
+"""
+Wallet CLI for demonstrating the usage of TEMPO Stellar API.
+
+1) Installation
+
+python3 -m pip install virtualenv
+python3 -m virtualenv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+2) Running
+
+python cli.py --help
+
+"""
 import argparse
 import json
 import sys

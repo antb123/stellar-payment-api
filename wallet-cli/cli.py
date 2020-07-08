@@ -7,7 +7,6 @@ python3 -m pip install virtualenv
 python3 -m virtualenv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-# add your local settings to local_settings.py
 
 2) Running
 

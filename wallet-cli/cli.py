@@ -299,7 +299,7 @@ def main():
             try:
                 os.remove(settings.DATABASE_PATH)
             except FileNotFoundError:
-                print_red('Database file does not exist')
+                error('Database file does not exist')
     else:
         if os.path.isfile(settings.DATABASE_PATH):
             try:

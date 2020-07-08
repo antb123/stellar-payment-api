@@ -308,9 +308,7 @@ def main():
             except ValueError:
                 error('Password is incorrect or database is corrupted')
         else:
-            print(colored('Database file does not exist. Use the following command to create it:', 'yellow'))
-            print()
-            print(colored('python cli.py database create', 'yellow'))
+            print(colored('Database file does not exist. Use the "database create" to create it.', 'yellow'))
             sys.exit(1)
 
     if args._option == 'sep1':

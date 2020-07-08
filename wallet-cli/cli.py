@@ -33,7 +33,6 @@ import settings
 
 
 PARSERS = {}
-DATA = {}
 
 
 def argparser():
@@ -219,10 +218,9 @@ def argparser():
 
 
 def load_database():
-    global DATA
     pw = getpass(magenta('Database password: '))
-    DATA = database.read(pw)
-    settings.init(DATA['stellar_network'], DATA['secret'])
+    data = database.read(pw)
+    settings.init(data['stellar_network'], data['secret'])
 
 
 def pp(obj):
@@ -291,9 +289,11 @@ def main():
                     continue
                 break
 
-            DATA['secret'] = secret
-            DATA['stellar_network'] = stellar_network
-            database.write(pw, DATA)
+            data = {
+                'secret': secret,
+                'stellar_network': stellar_network,
+            }
+            database.write(pw, data)
 
         elif args._operation == 'delete':
             try:

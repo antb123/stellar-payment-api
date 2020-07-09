@@ -15,8 +15,7 @@ the Stellar network.
     - [4.3. Trustline](#43-trustline)  
     - [4.4. Deposit](#44-deposit)  
     - [4.5. Withdrawal](#35-withdrawal)  
-* [5. Links](#5-links)
-* [6. Wallet CLI](#6-wallet-cli)
+* [5. Wallet CLI](#5-wallet-cli)
 
 ## 1. Overview
 
@@ -31,13 +30,12 @@ The relevant SEPs for this document are listed [below](#3-seps).
 Here are a few links to help you get started:
 * [Stellar Introduction](https://developers.stellar.org/docs/start/introduction/)
 * [Stellar Tools](https://developers.stellar.org/docs/software-and-sdks/)
-* [Sep24 testing tool](http://sep24.stellar.org/)
-* [Stellar Awesome links](https://github.com/koltenb/awesome-stellar)
-* [Javascript tutorial](https://blog.abuiles.com/building-your-own-venmo-with-stellar/)
+* [SEP-24 Testing Tool](http://sep24.stellar.org/)
+* [Stellar Awesome Links](https://github.com/koltenb/awesome-stellar)
+* [Javascript Tutorial](https://blog.abuiles.com/building-your-own-venmo-with-stellar/)
 * [Validate EURT is working](https://anchor-validator.stellar.org/?home_domain=k.tempocrypto.com&currency=EURT&mainnet=true&project=SEP24)
-
-
-
+* [SEP-24 Instructions for Wallets](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md#basic-wallet-implementation)
+* [SEP-6 Instructions for Wallets](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md#basic-wallet-implementation)
 
 
 Overview of the steps to do a deposit or withdrawal using TEMPO:
@@ -84,6 +82,7 @@ Assets:
 * [SEP-2](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0002.md): not supported
 * [SEP-6](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md): fully compliant, requires account to be already verified, see notes below
 * [SEP-10](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0010.md): fully compliant
+* [SEP-12](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0012.md): not supported
 * [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md): fully compliant
 
 Notes:
@@ -279,24 +278,16 @@ def sep6_withdrawal():
     return render_sep6_instructions(response)  # display instructions to user
 ```
 
-## 5. Links
-
-* [SEP-24: Instructions for Wallets](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md#basic-wallet-implementation)
-* [SEP-6: Instructions for Wallets](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md#basic-wallet-implementation)
-
-* [SEP-24 Demo Wallet](https://sep24.stellar.org)
-* [Anchor Validator](http://anchor-validator.stellar.org/)
-
-## 6. Wallet CLI
+## 5. Wallet CLI
 
 This repository contains a CLI Stellar wallet implementation for demonstration purposes.  
 
-### 6.1. Requirements
+### 5.1. Requirements
 
 * Python3.6+
 * pip3
 
-### 6.2. Dependencies
+### 5.2. Dependencies
 
 ```
 cd wallet-cli
@@ -304,7 +295,7 @@ python3 -m pip install virtualenv
 python3 -m virtualenv .venv
 ```
 
-### 6.3. Running
+### 5.3. Running
 
 Activate virtualenv (required only once for a terminal session):
 ```

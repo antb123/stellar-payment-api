@@ -1,4 +1,4 @@
-pycrypto==2.6.1
+pycryptodome==3.9.8
 requests==2.24.0
 stellar-sdk==2.6.1
 termcolor==1.1.0

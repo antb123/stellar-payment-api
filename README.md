@@ -293,6 +293,7 @@ This repository contains a CLI Stellar wallet implementation for demonstration p
 cd wallet-cli
 python3 -m pip install virtualenv
 python3 -m virtualenv .venv
+pip install -r requirements.txt
 ```
 
 ### 5.3. Running

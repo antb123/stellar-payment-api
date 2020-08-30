@@ -14,7 +14,8 @@ the Stellar network.
     - [4.2. Get auth token](#42-get-auth-token)  
     - [4.3. Trustline](#43-trustline)  
     - [4.4. Deposit](#44-deposit)  
-    - [4.5. Withdrawal](#35-withdrawal)  
+    - [4.5. Withdrawal](#45-withdrawal)  
+    - [4.6. Direct transfer (Anchor-Anchor)](#46-direct-transfer-anchor-anchor)  
 * [5. Wallet CLI](#5-wallet-cli)
 
 ## 1. Overview
@@ -84,6 +85,7 @@ Assets:
 * [SEP-10](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0010.md): fully compliant
 * [SEP-12](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0012.md): not supported
 * [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md): fully compliant
+* [SEP-31](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0031.md): being tested on testnet
 
 Notes:
 * SEP-6 can only be used after user document verification (KYC), either through SEP-24 or manual approval
@@ -175,31 +177,16 @@ Deposits are a way for users to deposit real world currencies (ex: USD, EUR) int
 For example, a user can have EUR on a bank account outside Stellar, and deposit that as EURT into a Stellar account.  
 To deposit assets, the Wallet must create deposit transactions on TEMPO.  
 To create transactions, there are two options:
-* [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md)
-  - Interactive - all information needed from the user is collected by TEMPO using web pages
-  - Requires opening a popup window or iframe pointing to an URL provided by TEMPO
-  - See [example](#sep-24-deposit-python-example) below
 * [SEP-6](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md)
   - Non-interactive - Wallet must provide all required information through HTTP requests
   - Does not require opening any external web page
   - **TEMPO requires the account to be already verified (KYC approved) in order to allow SEP-6 operations.
   An account can be verified through SEP-24 or manually approved by TEMPO.**
   - See [example](#sep-6-deposit-python-example) below
-
-#### SEP-24 Deposit Python example:
-```python
-def sep24_deposit():
-    data = {
-        'asset_code': 'PURPLE',
-        'account': 'GC75JLZ6...',
-    }
-    headers = {
-        'Authorization': 'Bearer ' + sep10_token
-    }
-    url = stellar_toml['TRANSFER_SERVER_SEP0024'] + '/transactions/deposit/interactive'
-    response = requests.post(url, data=data, headers=headers).json()
-    return render_sep24_interactive(response['url'])  # popup window on the client
-```
+* [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md)
+  - Interactive - all information needed from the user is collected by TEMPO using web pages
+  - Requires opening a popup window or iframe pointing to an URL provided by TEMPO
+  - See [example](#sep-24-deposit-python-example) below
 
 #### SEP-6 Deposit Python example:
 ```python
@@ -224,36 +211,37 @@ def sep6_deposit():
     return render_sep6_instructions(response)  # display instructions to user
 ```
 
+#### SEP-24 Deposit Python example:
+```python
+def sep24_deposit():
+    data = {
+        'asset_code': 'PURPLE',
+        'account': 'GC75JLZ6...',
+    }
+    headers = {
+        'Authorization': 'Bearer ' + sep10_token
+    }
+    url = stellar_toml['TRANSFER_SERVER_SEP0024'] + '/transactions/deposit/interactive'
+    response = requests.post(url, data=data, headers=headers).json()
+    return render_sep24_interactive(response['url'])  # popup window on the client
+```
+
 ### 4.5. Withdrawal
 
 Withdrawals are a way for users to obtain assets from their Stellar account as real world currencies (ex: USD, EUR).  
 For example, a user can have EURT balance in a Stellar account and withdraw that as EUR, receiving the EUR on a bank account outside Stellar.  
 To withdraw assets, the Wallet must create withdrawal transactions on TEMPO.  
 To create transactions, there are two options:
-* [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md)
-  - Interactive - all information needed from the user is collected by TEMPO using web pages
-  - Requires opening a popup window or iframe pointing to an URL provided by TEMPO
-  - See [example](#sep-24-withdrawal-python-example) below
 * [SEP-6](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md)
-  - Non-interactive - Wallet must provide all required information through HTTP requests
+  - Non-interactive - Wallet must provide all required information through API requests
   - Does not require opening any external web page
   - **TEMPO requires the account to be already verified (KYC approved) in order to allow SEP-6 operations.
   An account can be verified through SEP-24 or manually approved by TEMPO.**
   - See [example](#sep-6-withdrawal-python-example) below
-
-#### SEP-24 Withdrawal Python example:
-```python
-def sep24_withdrawal():
-    data = {
-        'asset_code': 'PURPLE',
-    }
-    headers = {
-        'Authorization': 'Bearer ' + sep10_token
-    }
-    url = stellar_toml['TRANSFER_SERVER_SEP0024'] + '/transactions/withdraw/interactive'
-    response = requests.post(url, data=data, headers=headers).json()
-    return render_sep24_interactive(response['url'])  # popup window on the client
-```
+* [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md)
+  - Interactive - all information needed from the user is collected by TEMPO using web pages
+  - Requires opening a popup window or iframe pointing to an URL provided by TEMPO
+  - See [example](#sep-24-withdrawal-python-example) below
 
 #### SEP-6 Withdrawal Python example:
 ```python
@@ -276,6 +264,69 @@ def sep6_withdrawal():
     url = stellar_toml['TRANSFER_SERVER'] + '/withdraw'
     response = requests.post(url, data=data, headers=headers).json()
     return render_sep6_instructions(response)  # display instructions to user
+```
+
+#### SEP-24 Withdrawal Python example:
+```python
+def sep24_withdrawal():
+    data = {
+        'asset_code': 'PURPLE',
+    }
+    headers = {
+        'Authorization': 'Bearer ' + sep10_token
+    }
+    url = stellar_toml['TRANSFER_SERVER_SEP0024'] + '/transactions/withdraw/interactive'
+    response = requests.post(url, data=data, headers=headers).json()
+    return render_sep24_interactive(response['url'])  # popup window on the client
+```
+
+### 4.6. Direct transfer (Anchor-Anchor)
+
+A direct transfer is a Stellar payment made between two Anchor accounts.  
+For example, let's say Anchor A is a bank and Anchor B is another bank.  
+A person who has a bank account in Anchor A wants to send a money transfer
+ to another person who has a bank account in Anchor B.  
+Normally, this can be accomplished via standard bank transfers like SEPA, Wire, etc.  
+With [SEP-31](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0031.md),
+ Anchor A can send a Stellar payment to Anchor B instead of a bank transfer,
+ this allows the anchors to take advantage of the speed of Stellar payments and
+ avoid the burocracy of standard bank transfers (which can take days to take place).
+
+* [SEP-31](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0031.md)
+  - Used for anchor-anchor direct transfers
+  - Non-interactive - Anchor must provide all required information through API requests
+  - Does not require opening any external web page
+  - Originating stellar account must be pre-approved by TEMPO
+  - See [example](#sep-31-python-example) below
+
+#### SEP-31 Python example:
+```python
+def sep31_deposit():
+    payload = {
+        "amount": 15.0,
+        "asset_code": "PURPLE",
+        "fields": {
+            "transaction": {
+                "remitter_email": "test@test.test",
+                "remitter_first_name": "John",
+                "remitter_last_name": "Doe",
+                "remitter_phone_number": "+4906921999510",
+                "beneficiary_email": "test2@test.test",
+                "beneficiary_first_name": "Ana",
+                "beneficiary_last_name": "Doe",
+                "beneficiary_country": "fr",
+                "beneficiary_bank_iban": "GB02 REVO 0099 7040 2170 16",
+                "beneficiary_bank_bic": "CHASUS33",
+                "beneficiary_phone_number": "+4906921999510"
+            }
+        }
+    }
+    headers = {
+        'Authorization': 'Bearer ' + sep10_token
+    }
+    url = stellar_toml['TRANSFER_SERVER_SEP0031'] + '/transactions'
+    response = requests.post(url, json=payload, headers=headers).json()
+    return response
 ```
 
 ## 5. Wallet CLI

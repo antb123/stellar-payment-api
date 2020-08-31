@@ -301,7 +301,7 @@ With [SEP-31](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/
 
 #### SEP-31 Python example:
 ```python
-def sep31_deposit():
+def sep31_create_transaction():
     payload = {
         "amount": 15.0,
         "asset_code": "PURPLE",

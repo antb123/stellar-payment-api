@@ -16,6 +16,7 @@ python cli.py --help
 import argparse
 from getpass import getpass
 import json
+from json.decoder import JSONDecodeError
 import os
 import sys
 
@@ -29,6 +30,7 @@ import trust
 import sep6
 import sep10
 import sep24
+import sep31
 import settings
 
 
@@ -37,6 +39,8 @@ PARSERS = {}
 
 def argparser():
     parser = argparse.ArgumentParser(description='TEMPO Stellar CLI Example')
+    parser.add_argument('-e', '--env', action='store_true',
+            help='get database password from WALLET_CLI_PASSWORD environment variable')
     option_subparsers = parser.add_subparsers(help='option', dest='_option')
 
     def add_database_parser():
@@ -207,18 +211,45 @@ def argparser():
         transactions_parser.add_argument('--token', help='SEP10 auth token')
         PARSERS['sep24']['transactions'] = transactions_parser
 
+    def add_sep31_parser():
+        sep31_parser = option_subparsers.add_parser('sep31')
+        PARSERS['sep31'] = {}
+        PARSERS['sep31']['_'] = sep31_parser
+        sep31_subparsers = sep31_parser.add_subparsers(description='operations', dest='_operation')
+
+        info_parser = sep31_subparsers.add_parser('info')
+        PARSERS['sep31']['info'] = info_parser
+
+        create_transaction_parser = sep31_subparsers.add_parser('create_transaction')
+        create_transaction_parser.add_argument('--amount', required=True)
+        create_transaction_parser.add_argument('--asset-code')
+        create_transaction_parser.add_argument('--fields', help='fields as a JSON string')
+        PARSERS['sep31']['create_transaction'] = create_transaction_parser
+
+        get_transaction_parser = sep31_subparsers.add_parser('get_transaction')
+        get_transaction_parser.add_argument('--transaction-id', required=True)
+        PARSERS['sep31']['get_transaction'] = get_transaction_parser
+
+        patch_transaction_parser = sep31_subparsers.add_parser('patch_transaction')
+        patch_transaction_parser.add_argument('--transaction-id', required=True)
+        patch_transaction_parser.add_argument('--fields', help='fields as a JSON string', required=True)
+        PARSERS['sep31']['patch_transaction'] = patch_transaction_parser
+
+
     add_database_parser()
     add_sep1_parser()
     add_trust_parser()
     add_sep6_parser()
     add_sep10_parser()
     add_sep24_parser()
+    add_sep31_parser()
 
     return parser
 
 
-def load_database():
-    pw = getpass(magenta('Database password: '))
+def load_database(pw=None):
+    if pw is None:
+        pw = getpass(magenta('Database password: '))
     data = database.read(pw)
     settings.init(data['stellar_network'], data['secret'])
 
@@ -301,14 +332,20 @@ def main():
             except FileNotFoundError:
                 error('Database file does not exist')
     else:
-        if os.path.isfile(settings.DATABASE_PATH):
-            try:
-                load_database()
-            except ValueError:
-                error('Password is incorrect or database is corrupted')
-        else:
+        if not args.env and not os.path.isfile(settings.DATABASE_PATH):
             print(colored('Database file does not exist. Use the "python cli.py database create" to create it.', 'yellow'))
             sys.exit(1)
+        elif args.env:
+            pw = os.getenv('WALLET_CLI_PASSWORD')
+            if pw is None:
+                error('Environment variable WALLET_CLI_PASSWORD is required '
+                        'when using the -e/--env option')
+        else:
+            pw = None
+        try:
+            load_database(pw)
+        except ValueError:
+            error('Password is incorrect or database is corrupted')
 
     if args._option == 'sep1':
         if args._operation == 'fetch_stellar_toml':
@@ -378,9 +415,9 @@ def main():
             }
             if params['type'] == 'sepa':
                 if not args.bank_bic:
-                    error('Missing required argument --bank-bic', parsers['sep6']['withdraw'])
+                    error('Missing required argument --bank-bic', PARSERS['sep6']['withdraw'])
                 if not args.dest:
-                    error('Missing required argument --dest', parsers['sep6']['withdraw'])
+                    error('Missing required argument --dest', PARSERS['sep6']['withdraw'])
             if args.bank_bic:
                 params['bank_bic'] = args.bank_bic
             if args.dest:
@@ -411,7 +448,7 @@ def main():
             if args.external_transaction_id:
                 params['external_transaction_id'] = args.external_transaction_id
             if not params:
-                error('An argument is required', parsers['sep6']['transaction'])
+                error('An argument is required', PARSERS['sep6']['transaction'])
 
             pp(sep6.transaction(params, args.token))
 
@@ -498,7 +535,7 @@ def main():
             if args.external_transaction_id:
                 params['external_transaction_id'] = args.external_transaction_id
             if not params:
-                error('An argument is required', parsers['sep24']['transaction'])
+                error('An argument is required', PARSERS['sep24']['transaction'])
 
             pp(sep24.transaction(params, args.token))
 
@@ -516,6 +553,34 @@ def main():
                 params['paging_id'] = args.paging_id
 
             pp(sep24.transactions(params, args.token))
+
+    elif args._option == 'sep31':
+        if args._operation == 'info':
+            pp(sep31.info())
+
+        elif args._operation == 'create_transaction':
+            payload = {
+                'amount': args.amount,
+                'asset_code': args.asset_code or settings.ASSET['code'],
+            }
+            if args.fields:
+                try:
+                    payload['fields'] = json.loads(args.fields)
+                except (JSONDecodeError, TypeError):
+                    error('fields must be a JSON string', PARSERS['sep31']['create_transaction'])
+            pp(sep31.transactions_post(payload))
+
+        elif args._operation == 'get_transaction':
+            pp(sep31.transactions_get(args.transaction_id))
+
+        elif args._operation == 'patch_transaction':
+            try:
+                payload = {
+                    'fields': json.loads(args.fields)
+                }
+            except (JSONDecodeError, TypeError):
+                error('fields must be a JSON string', PARSERS['sep31']['patch_transaction'])
+            pp(sep31.transactions_patch(args.transaction_id, payload))
 
 
 if __name__ == '__main__':

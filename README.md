@@ -314,7 +314,6 @@ def sep31_deposit():
                 "beneficiary_email": "test2@test.test",
                 "beneficiary_first_name": "Ana",
                 "beneficiary_last_name": "Doe",
-                "beneficiary_country": "fr",
                 "beneficiary_bank_iban": "GB02 REVO 0099 7040 2170 16",
                 "beneficiary_bank_bic": "CHASUS33",
                 "beneficiary_phone_number": "+4906921999510"

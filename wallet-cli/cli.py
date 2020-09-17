@@ -332,7 +332,7 @@ def main():
             except FileNotFoundError:
                 error('Database file does not exist')
     else:
-        if not args.env and not os.path.isfile(settings.DATABASE_PATH):
+        if not os.path.isfile(settings.DATABASE_PATH):
             print(colored('Database file does not exist. Use the "python cli.py database create" to create it.', 'yellow'))
             sys.exit(1)
         elif args.env:

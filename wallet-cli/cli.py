@@ -55,6 +55,9 @@ def argparser():
         delete_parser = database_subparsers.add_parser('delete')
         PARSERS['database']['delete'] = delete_parser
 
+        list_parser = database_subparsers.add_parser('list')
+        PARSERS['database']['list'] = list_parser
+
     def add_sep1_parser():
         sep1_parser = option_subparsers.add_parser('sep1')
         PARSERS['sep1'] = {}
@@ -69,8 +72,8 @@ def argparser():
         PARSERS['trust']['_'] = trust_parser
         trust_subparsers = trust_parser.add_subparsers(description='operations', dest='_operation')
         change_trust_parser = trust_subparsers.add_parser('change_trust')
-        change_trust_parser.add_argument('--asset-code')
-        change_trust_parser.add_argument('--issuer')
+        change_trust_parser.add_argument('--asset-code', required=True)
+        change_trust_parser.add_argument('--issuer', required=True)
         change_trust_parser.add_argument('--limit')
         PARSERS['trust']['change_trust'] = change_trust_parser
 
@@ -247,11 +250,25 @@ def argparser():
     return parser
 
 
-def load_database(pw=None):
-    if pw is None:
-        pw = getpass(magenta('Database password: '))
-    data = database.read(pw)
-    settings.init(data['stellar_network'], data['secret'])
+def load_database(env=False):
+    if not os.path.isfile(settings.DATABASE_PATH):
+        print(colored('Database file does not exist. Use the "python cli.py database create" to create it.', 'yellow'))
+        sys.exit(1)
+    elif env:
+        pw = os.getenv('WALLET_CLI_PASSWORD')
+        if pw is None:
+            error('Environment variable WALLET_CLI_PASSWORD is required '
+                    'when using the -e/--env option')
+    else:
+        pw = None
+
+    try:
+        if pw is None:
+            pw = getpass(magenta('Database password: '))
+        data = database.read(pw)
+        settings.init(data['stellar_network'], data['secret'])
+    except ValueError:
+        error('Password is incorrect or database is corrupted')
 
 
 def pp(obj):
@@ -331,21 +348,14 @@ def main():
                 os.remove(settings.DATABASE_PATH)
             except FileNotFoundError:
                 error('Database file does not exist')
+
+        elif args._operation == 'list':
+            load_database(args.env)
+            cprint('Database:', 'white', attrs=['bold'])
+            print(' Stellar Network: ' + settings.STELLAR_NETWORK)
+            print(' Account: ' + settings.PUBKEY)
     else:
-        if not os.path.isfile(settings.DATABASE_PATH):
-            print(colored('Database file does not exist. Use the "python cli.py database create" to create it.', 'yellow'))
-            sys.exit(1)
-        elif args.env:
-            pw = os.getenv('WALLET_CLI_PASSWORD')
-            if pw is None:
-                error('Environment variable WALLET_CLI_PASSWORD is required '
-                        'when using the -e/--env option')
-        else:
-            pw = None
-        try:
-            load_database(pw)
-        except ValueError:
-            error('Password is incorrect or database is corrupted')
+        load_database(args.env)
 
     if args._option == 'sep1':
         if args._operation == 'fetch_stellar_toml':
@@ -353,9 +363,7 @@ def main():
 
     elif args._option == 'trust':
         if args._operation == 'change_trust':
-            pp(trust.change_trust(args.asset_code or settings.ASSET['code'],
-                                  args.issuer or settings.ASSET['issuer'],
-                                  args.limit))
+            pp(trust.change_trust(args.asset_code, args.issuer, args.limit))
 
     elif args._option == 'sep10':
         if args._operation == 'auth':

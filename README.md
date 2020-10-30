@@ -1,6 +1,5 @@
-# TEMPO's Stellar API documentation
-
-TEMPO is a Stellar Anchor and provides support for EUR deposits and withdrawals on
+Stellar API documentation
+Stellar Anchors provides support for token deposits and withdrawals on
 the Stellar network.
 
 # Summary
@@ -9,7 +8,7 @@ the Stellar network.
     - [2.1. Public Network](#21-public-network)  
     - [2.2. Test Network](#22-test-network)  
 * [3. SEPs](#3-seps)  
-* [4. Integrating with TEMPO](#4-integrating-with-tempo)  
+* [4. Integrating](#4-integrating-with-tempo)  
     - [4.1. Fetch stellar.toml](#41-fetch-stellartoml)  
     - [4.2. Get auth token](#42-get-auth-token)  
     - [4.3. Trustline](#43-trustline)  
@@ -20,7 +19,7 @@ the Stellar network.
 
 ## 1. Overview
 
-As a Stellar Anchor, TEMPO allows you to deposit and withdraw Euros using your
+As a Stellar Anchor, you can deposit and withdraw tokens using your
 Stellar account.  
 The protocols which define how to deposit and withdraw are called SEPs.  
 Each SEP can be found in the [Stellar git repository](https://github.com/stellar/stellar-protocol/tree/master/ecosystem).
@@ -44,7 +43,7 @@ Overview of the steps to do a deposit or withdrawal using TEMPO:
   - The Wallet fetches the Anchor's `stellar.toml` file, which contains information
     about currencies and URLs required by the SEPs
 * Create trustlines to the Anchor
-  - In order to hold assets issued by TEMPO, the Wallet must create a trustline to TEMPO
+  - In order to hold assets issued, the Wallet must create a trustline to the asset
     on each of its Stellar accounts. Otherwise the accounts won't be able to receive the deposits.
 * Create a deposit or withdrawal transaction using [SEP-6](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md) or [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md)
   - The main difference between SEP-6 and SEP-24 is that SEP-6 requires the Wallet
@@ -54,7 +53,7 @@ Overview of the steps to do a deposit or withdrawal using TEMPO:
 
 Stellar has two networks: testnet and public.  
 TEMPO operates on both networks, and the domains are listed [below](#2-domains).  
-More details on how to integrate with TEMPO are found [below](#3-integrating-with-tempo).
+More details on how to integrate with TEMPO are found [below](#3-integrating).
 
 ## 2. Domains
 
@@ -249,11 +248,11 @@ def sep6_withdrawal():
     data = {
         'asset_code': 'PURPLE',
 
-        # these fields are specific for TEMPO,
+        # these fields,
         #  they're specified on the SEP-6 /info endpoint
         'amount': '12.5',
         'type': 'cash',
-        'dest_country': 'fr',
+        'dest_country': 'uk',
         'benef_first_name': 'John',
         'benef_last_name': 'Doe',
         'benef_email': 'johndoe@example.com',

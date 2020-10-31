@@ -1,4 +1,4 @@
-Stellar API documentation
+API documentation
 Stellar Anchors provides support for token deposits and withdrawals on
 the Stellar network.
 
@@ -8,7 +8,7 @@ the Stellar network.
     - [2.1. Public Network](#21-public-network)  
     - [2.2. Test Network](#22-test-network)  
 * [3. SEPs](#3-seps)  
-* [4. Integrating](#4-integrating-with-tempo)  
+* [4. Integrating](#4-integrating)  
     - [4.1. Fetch stellar.toml](#41-fetch-stellartoml)  
     - [4.2. Get auth token](#42-get-auth-token)  
     - [4.3. Trustline](#43-trustline)  
@@ -89,7 +89,7 @@ Assets:
 Notes:
 * SEP-6 can only be used after user document verification (KYC), either through SEP-24 or manual approval
 
-## 4. Integrating with TEMPO
+## 4. Integrating
 
 ### 4.1. Fetch stellar.toml
 `stellar.toml` provides these variables, which are required for SEP-10, SEP-6 and SEP-24 respectively:
@@ -97,7 +97,7 @@ Notes:
   - `TRANSFER_SERVER`
   - `TRANSFER_SERVER_SEP0024`
 
-Python example on how to fetch TEMPO's testnet `stellar.toml`:
+Python example on how to fetch the testnet `stellar.toml`:
 ```python
 import requests
 import toml
@@ -179,7 +179,7 @@ To create transactions, there are two options:
 * [SEP-6](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md)
   - Non-interactive - Wallet must provide all required information through HTTP requests
   - Does not require opening any external web page
-  - **TEMPO requires the account to be already verified (KYC approved) in order to allow SEP-6 operations.
+  - **Normally the account must be already verified (KYC approved) in order to allow SEP-6 operations.
   An account can be verified through SEP-24 or manually approved by TEMPO.**
   - See [example](#sep-6-deposit-python-example) below
 * [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md)
@@ -228,13 +228,13 @@ def sep24_deposit():
 ### 4.5. Withdrawal
 
 Withdrawals are a way for users to obtain assets from their Stellar account as real world currencies (ex: USD, EUR).  
-For example, a user can have EURT balance in a Stellar account and withdraw that as EUR, receiving the EUR on a bank account outside Stellar.  
+For example, a user can have token balance in a Stellar account and withdraw that as fiat, receiving the fiat on a bank account outside Stellar.  
 To withdraw assets, the Wallet must create withdrawal transactions on TEMPO.  
 To create transactions, there are two options:
 * [SEP-6](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md)
   - Non-interactive - Wallet must provide all required information through API requests
   - Does not require opening any external web page
-  - **TEMPO requires the account to be already verified (KYC approved) in order to allow SEP-6 operations.
+  - **Normally the account to be already verified (KYC approved) in order to allow SEP-6 operations.
   An account can be verified through SEP-24 or manually approved by TEMPO.**
   - See [example](#sep-6-withdrawal-python-example) below
 * [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md)

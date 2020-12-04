@@ -18,8 +18,10 @@ from getpass import getpass
 import json
 from json.decoder import JSONDecodeError
 import os
+import os.path
 import sys
 
+from requests.exceptions import RequestException
 from stellar_sdk.exceptions import Ed25519SecretSeedInvalidError
 from stellar_sdk.keypair import Keypair
 from termcolor import colored, cprint
@@ -29,6 +31,7 @@ import sep1
 import trust
 import sep6
 import sep10
+import sep12
 import sep24
 import sep31
 import settings
@@ -89,7 +92,7 @@ def argparser():
         fee_parser = sep6_subparsers.add_parser('fee')
         fee_parser.add_argument('--operation', required=True)
         fee_parser.add_argument('--amount', required=True)
-        fee_parser.add_argument('--asset-code')
+        fee_parser.add_argument('--asset-code', required=True)
         fee_parser.add_argument('--type')
         PARSERS['sep6']['fee'] = fee_parser
 
@@ -98,8 +101,8 @@ def argparser():
         deposit_parser.add_argument('--last-name', required=True)
         deposit_parser.add_argument('--email-address', required=True)
         deposit_parser.add_argument('--amount', required=True)
+        deposit_parser.add_argument('--asset-code', required=True)
         deposit_parser.add_argument('--account')
-        deposit_parser.add_argument('--asset-code')
         deposit_parser.add_argument('--memo-type')
         deposit_parser.add_argument('--memo')
         deposit_parser.add_argument('--type', choices=['sepa', 'cash'])
@@ -113,6 +116,7 @@ def argparser():
         withdraw_parser = sep6_subparsers.add_parser('withdraw')
         withdraw_parser.add_argument('--amount', required=True)
         withdraw_parser.add_argument('--type', required=True, choices=['sepa', 'cash'])
+        withdraw_parser.add_argument('--asset-code', required=True)
         withdraw_parser.add_argument('--dest-country', required=True)
         withdraw_parser.add_argument('--benef-first-name', required=True)
         withdraw_parser.add_argument('--benef-last-name', required=True)
@@ -121,7 +125,6 @@ def argparser():
         withdraw_parser.add_argument('--benef-city', required=True)
         withdraw_parser.add_argument('--bank-bic', help='required if type is sepa')
         withdraw_parser.add_argument('--dest', help='required if type is sepa')
-        withdraw_parser.add_argument('--asset-code')
         withdraw_parser.add_argument('--memo')
         withdraw_parser.add_argument('--memo-type')
         withdraw_parser.add_argument('--wallet-name')
@@ -140,7 +143,7 @@ def argparser():
         PARSERS['sep6']['transaction'] = transaction_parser
 
         transactions_parser = sep6_subparsers.add_parser('transactions')
-        transactions_parser.add_argument('--asset-code')
+        transactions_parser.add_argument('--asset-code', required=True)
         transactions_parser.add_argument('--no-older-than')
         transactions_parser.add_argument('--limit')
         transactions_parser.add_argument('--kind')
@@ -156,6 +159,31 @@ def argparser():
         auth_parser = sep10_subparsers.add_parser('auth')
         PARSERS['sep10']['auth'] = auth_parser
 
+    def add_sep12_parser():
+        sep12_parser = option_subparsers.add_parser('sep12')
+        PARSERS['sep12'] = {}
+        PARSERS['sep12']['_'] = sep12_parser
+        sep12_subparsers = sep12_parser.add_subparsers(description='operations', dest='_operation')
+
+        get_parser = sep12_subparsers.add_parser('get')
+        get_parser.add_argument('--id')
+        get_parser.add_argument('--account')
+        get_parser.add_argument('--memo')
+        get_parser.add_argument('--memo_type')
+        get_parser.add_argument('--type')
+        get_parser.add_argument('--lang')
+        get_parser.add_argument('--token', help='SEP10 auth token')
+        PARSERS['sep12']['get'] = get_parser
+
+        put_parser = sep12_subparsers.add_parser('put')
+        put_parser.add_argument(
+            '--data',
+            required=True,
+            help='Parameters as a JSON string. Ex: {"memo": "MEMO1234"}'
+        )
+        put_parser.add_argument('--token', help='SEP10 auth token')
+        PARSERS['sep12']['put'] = put_parser
+
     def add_sep24_parser():
         sep24_parser = option_subparsers.add_parser('sep24')
         PARSERS['sep24'] = {}
@@ -168,33 +196,25 @@ def argparser():
         fee_parser = sep24_subparsers.add_parser('fee')
         fee_parser.add_argument('--operation', required=True)
         fee_parser.add_argument('--amount', required=True)
-        fee_parser.add_argument('--asset-code')
+        fee_parser.add_argument('--asset-code', required=True)
         fee_parser.add_argument('--type')
         PARSERS['sep24']['fee'] = fee_parser
 
         deposit_parser = sep24_subparsers.add_parser('deposit')
-        deposit_parser.add_argument('--account')
-        deposit_parser.add_argument('--asset-code')
-        deposit_parser.add_argument('--asset-issuer')
-        deposit_parser.add_argument('--amount')
-        deposit_parser.add_argument('--memo-type')
-        deposit_parser.add_argument('--memo')
-        deposit_parser.add_argument('--wallet-name')
-        deposit_parser.add_argument('--wallet-url')
-        deposit_parser.add_argument('--lang')
+        deposit_parser.add_argument(
+            '--data',
+            required=True,
+            help='Parameters as a JSON string. Ex: {"memo": "MEMO1234"}'
+        )
         deposit_parser.add_argument('--token', help='SEP10 auth token')
         PARSERS['sep24']['deposit'] = deposit_parser
 
         withdraw_parser = sep24_subparsers.add_parser('withdraw')
-        withdraw_parser.add_argument('--asset-code')
-        withdraw_parser.add_argument('--asset-issuer')
-        withdraw_parser.add_argument('--amount')
-        withdraw_parser.add_argument('--account')
-        withdraw_parser.add_argument('--memo')
-        withdraw_parser.add_argument('--memo-type')
-        withdraw_parser.add_argument('--wallet-name')
-        withdraw_parser.add_argument('--wallet-url')
-        withdraw_parser.add_argument('--lang')
+        withdraw_parser.add_argument(
+            '--data',
+            required=True,
+            help='Parameters as a JSON string. Ex: {"memo": "MEMO1234"}'
+        )
         withdraw_parser.add_argument('--token', help='SEP10 auth token')
         PARSERS['sep24']['withdraw'] = withdraw_parser
 
@@ -206,7 +226,7 @@ def argparser():
         PARSERS['sep24']['transaction'] = transaction_parser
 
         transactions_parser = sep24_subparsers.add_parser('transactions')
-        transactions_parser.add_argument('--asset-code')
+        transactions_parser.add_argument('--asset-code', required=True)
         transactions_parser.add_argument('--no-older-than')
         transactions_parser.add_argument('--limit')
         transactions_parser.add_argument('--kind')
@@ -225,7 +245,7 @@ def argparser():
 
         create_transaction_parser = sep31_subparsers.add_parser('create_transaction')
         create_transaction_parser.add_argument('--amount', required=True)
-        create_transaction_parser.add_argument('--asset-code')
+        create_transaction_parser.add_argument('--asset-code', required=True)
         create_transaction_parser.add_argument('--fields', help='fields as a JSON string')
         PARSERS['sep31']['create_transaction'] = create_transaction_parser
 
@@ -244,6 +264,7 @@ def argparser():
     add_trust_parser()
     add_sep6_parser()
     add_sep10_parser()
+    add_sep12_parser()
     add_sep24_parser()
     add_sep31_parser()
 
@@ -266,7 +287,7 @@ def load_database(env=False):
         if pw is None:
             pw = getpass(magenta('Database password: '))
         data = database.read(pw)
-        settings.init(data['stellar_network'], data['secret'])
+        settings.init(data['anchor_domain'], data['stellar_network'], data['secret'])
     except ValueError:
         error('Password is incorrect or database is corrupted')
 
@@ -304,10 +325,24 @@ def main():
             print('The database is an encrypted file named '
                   + colored(settings.DATABASE_NAME, 'yellow', attrs=['bold']) + ', and it\'s'
                   ' used to store these values:')
-            print('- Stellar account secret key')
+            print('- Anchor domain')
             print('- Stellar network')
+            print('- Stellar account secret key')
             print('The database password and Stellar secret key will not be displayed'
                   ' on the screen while you type them.')
+
+            if os.path.isfile(settings.DATABASE_PATH):
+                cprint(
+                    'Database file {} already exists, do you want to override '
+                    'it? (y/N) '.format(settings.DATABASE_NAME),
+                    'yellow',
+                    attrs=['bold'],
+                    end='',
+                )
+                answer = input().strip()
+                if answer not in ['y', 'Y']:
+                    error('')
+
             while True:
                 pw = getpass(magenta('New database password: '))
                 confirm_pw = getpass(magenta('Repeat new database password: '))
@@ -327,8 +362,8 @@ def main():
                 print('Stellar network options:')
                 print(' 1 - TESTNET')
                 print(' 2 - PUBLIC')
-                answer = input('Stellar network (default = 1): ').strip()
-                if not answer or answer == '1':
+                answer = input('Stellar network: ').strip()
+                if answer == '1':
                     stellar_network = 'TESTNET'
                 elif answer == '2':
                     stellar_network = 'PUBLIC'
@@ -336,12 +371,24 @@ def main():
                     print_red('Invalid option')
                     continue
                 break
+            while True:
+                anchor_domain = input('Anchor domain (ex: testanchor.stellar.org): ').strip()
+                try:
+                    sep1.fetch_stellar_toml(anchor_domain)
+                    break
+                except RequestException:
+                    print_red('Invalid or unreachable Anchor domain')
+                    continue
 
             data = {
+                'anchor_domain': anchor_domain,
                 'secret': secret,
                 'stellar_network': stellar_network,
             }
             database.write(pw, data)
+            print()
+            cprint('Successfully created database.bin', 'green', attrs=['bold'])
+
 
         elif args._operation == 'delete':
             try:
@@ -352,6 +399,7 @@ def main():
         elif args._operation == 'list':
             load_database(args.env)
             cprint('Database:', 'white', attrs=['bold'])
+            print(' Anchor domain: ' + settings.ANCHOR_DOMAIN)
             print(' Stellar Network: ' + settings.STELLAR_NETWORK)
             print(' Account: ' + settings.PUBKEY)
     else:
@@ -365,10 +413,6 @@ def main():
         if args._operation == 'change_trust':
             pp(trust.change_trust(args.asset_code, args.issuer, args.limit))
 
-    elif args._option == 'sep10':
-        if args._operation == 'auth':
-            print(sep10.auth())
-
     elif args._option == 'sep6':
         if args._operation == 'info':
             pp(sep6.info())
@@ -376,7 +420,7 @@ def main():
         elif args._operation == 'fee':
             params = {
                 'operation': args.operation,
-                'asset_code': args.asset_code or settings.ASSET['code'],
+                'asset_code': args.asset_code,
                 'amount': args.amount,
             }
             if args.type:
@@ -385,7 +429,7 @@ def main():
 
         elif args._operation == 'deposit':
             params = {
-                'asset_code': args.asset_code or settings.ASSET['code'],
+                'asset_code': args.asset_code,
                 'account': args.account or settings.PUBKEY,
                 'first_name': args.first_name,
                 'last_name': args.last_name,
@@ -411,7 +455,7 @@ def main():
 
         elif args._operation == 'withdraw':
             params = {
-                'asset_code': args.asset_code or settings.ASSET['code'],
+                'asset_code': args.asset_code,
                 'amount': args.amount,
                 'type': args.type,
                 'dest_country': args.dest_country,
@@ -462,7 +506,7 @@ def main():
 
         elif args._operation == 'transactions':
             params = {
-                'asset_code': args.asset_code or settings.ASSET['code'],
+                'asset_code': args.asset_code,
             }
             if args.no_older_than:
                 params['no_older_than'] = args.no_older_than
@@ -475,6 +519,35 @@ def main():
 
             pp(sep6.transactions(params, args.token))
 
+    elif args._option == 'sep10':
+        if args._operation == 'auth':
+            print(sep10.auth())
+
+    elif args._option == 'sep12':
+        if args._operation == 'get':
+            params = {}
+            if args.id:
+                params['id'] = args.id
+            if args.account:
+                params['account'] = args.account
+            if args.memo:
+                params['memo'] = args.memo
+            if args.memo_type:
+                params['memo_type'] = args.memo_type
+            if args.type:
+                params['type'] = args.type
+            if args.lang:
+                params['lang'] = args.lang
+            pp(sep12.customer_get(params, args.token))
+
+        if args._operation == 'put':
+            try:
+                params = json.loads(args.data)
+            except (JSONDecodeError, TypeError):
+                error('data must be a JSON string', PARSERS['sep12']['put'])
+
+            pp(sep12.customer_put(params, args.token))
+
     elif args._option == 'sep24':
         if args._operation == 'info':
             pp(sep24.info())
@@ -482,7 +555,7 @@ def main():
         elif args._operation == 'fee':
             params = {
                 'operation': args.operation,
-                'asset_code': args.asset_code or settings.ASSET['code'],
+                'asset_code': args.asset_code,
                 'amount': args.amount,
             }
             if args.type:
@@ -490,47 +563,18 @@ def main():
             pp(sep24.fee(params))
 
         elif args._operation == 'deposit':
-            params = {
-                'asset_code': args.asset_code or settings.ASSET['code'],
-                'account': args.account or settings.PUBKEY,
-            }
-            if args.asset_issuer:
-                params['asset_issuer'] = args.asser_issuer
-            if args.amount:
-                params['amount'] = args.amount
-            if args.memo_type:
-                params['memo_type'] = args.memo_type
-            if args.memo:
-                params['memo'] = args.memo
-            if args.wallet_name:
-                params['wallet_name'] = args.wallet_name
-            if args.wallet_url:
-                params['wallet_url'] = args.wallet_url
-            if args.lang:
-                params['lang'] = args.lang
+            try:
+                params = json.loads(args.data)
+            except (JSONDecodeError, TypeError):
+                error('data must be a JSON string', PARSERS['sep24']['deposit'])
 
             pp(sep24.deposit(params, args.token))
 
         elif args._operation == 'withdraw':
-            params = {
-                'asset_code': args.asset_code or settings.ASSET['code']
-            }
-            if args.asset_issuer:
-                params['asset_issuer'] = args.asset_issuer
-            if args.amount:
-                params['amount'] = args.amount
-            if args.account:
-                params['account'] = args.account
-            if args.memo:
-                params['memo'] = args.memo
-            if args.memo_type:
-                params['memo_type'] = args.memo_type
-            if args.wallet_name:
-                params['wallet_name'] = args.wallet_name
-            if args.wallet_url:
-                params['wallet_url'] = args.wallet_url
-            if args.lang:
-                params['lang'] = args.lang
+            try:
+                params = json.loads(args.data)
+            except (JSONDecodeError, TypeError):
+                error('data must be a JSON string', PARSERS['sep24']['withdraw'])
 
             pp(sep24.withdraw(params, args.token))
 
@@ -549,7 +593,7 @@ def main():
 
         elif args._operation == 'transactions':
             params = {
-                'asset_code': args.asset_code or settings.ASSET['code'],
+                'asset_code': args.asset_code,
             }
             if args.no_older_than:
                 params['no_older_than'] = args.no_older_than
@@ -569,7 +613,7 @@ def main():
         elif args._operation == 'create_transaction':
             payload = {
                 'amount': args.amount,
-                'asset_code': args.asset_code or settings.ASSET['code'],
+                'asset_code': args.asset_code,
             }
             if args.fields:
                 try:

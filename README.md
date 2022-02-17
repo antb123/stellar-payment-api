@@ -60,10 +60,10 @@ More details on how to integrate with TEMPO are found [below](#3-integrating).
 ### 2.1. Public Network
 
 Domain:  
-`https://k.tempocrypto.com`
+`https://clpx.finance`
 
 Assets:
-* EURT (fiat)
+* CLPX (fiat)
 
 *fiat* assets represent currencies in the real world (EUR, USD) and can be
  deposited/withdrawn directly to bank accounts.
@@ -71,7 +71,7 @@ Assets:
 ### 2.2. Test Network
 
 Domain:  
-`https://ktest.tempocrypto.com`
+`https://ktest.clpx.finance (tbd)`
 
 Assets:
 * PURPLE
@@ -102,7 +102,7 @@ Python example on how to fetch the testnet `stellar.toml`:
 import requests
 import toml
 
-stellar_toml = toml.loads(requests.get('https://ktest.tempocrypto.com/.well-known/stellar.toml').text)
+stellar_toml = toml.loads(requests.get('https://clpx.finance/.well-known/stellar.toml').text)
 ```
 
 ### 4.2. Get auth token

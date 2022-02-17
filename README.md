@@ -38,7 +38,7 @@ Here are a few links to help you get started:
 * [SEP-6 Instructions for Wallets](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md#basic-wallet-implementation)
 
 
-Overview of the steps to do a deposit or withdrawal using TEMPO:
+Overview of the steps to do a deposit or withdrawal using our Anchor:
 * Fetch stellar.toml
   - The Wallet fetches the Anchor's `stellar.toml` file, which contains information
     about currencies and URLs required by the SEPs
@@ -52,8 +52,8 @@ Overview of the steps to do a deposit or withdrawal using TEMPO:
   - It's up to the Wallet to decide to use SEP-6 or SEP-24 to manage transactions.
 
 Stellar has two networks: testnet and public.  
-TEMPO operates on both networks, and the domains are listed [below](#2-domains).  
-More details on how to integrate with TEMPO are found [below](#3-integrating).
+Our Anchor operates on both networks, and the domains are listed [below](#2-domains).  
+More details on how to integrate with our Anchor are found [below](#3-integrating).
 
 ## 2. Domains
 
@@ -173,8 +173,8 @@ assert response['successful']
 ### 4.4. Deposit
 
 Deposits are a way for users to deposit real world currencies (ex: USD, EUR) into their Stellar account (usually managed by a Wallet).  
-For example, a user can have EUR on a bank account outside Stellar, and deposit that as EURT into a Stellar account.  
-To deposit assets, the Wallet must create deposit transactions on TEMPO.  
+For example, a user can have EUR on a bank account outside Stellar, and deposit that as CLPX into a Stellar account.  
+To deposit assets, the Wallet must create deposit transactions on our Anchor.  
 To create transactions, there are two options:
 * [SEP-6](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md)
   - Non-interactive - Wallet must provide all required information through HTTP requests

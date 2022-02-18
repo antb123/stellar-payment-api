@@ -1,5 +1,5 @@
 """
-Wallet CLI for demonstrating the usage of TEMPO Stellar API.
+Wallet CLI
 
 1) Installation
 
@@ -41,7 +41,7 @@ PARSERS = {}
 
 
 def argparser():
-    parser = argparse.ArgumentParser(description='TEMPO Stellar CLI Example')
+    parser = argparse.ArgumentParser(description='Wallet CLI')
     parser.add_argument('-e', '--env', action='store_true',
             help='get database password from WALLET_CLI_PASSWORD environment variable')
     option_subparsers = parser.add_subparsers(help='option', dest='_option')

@@ -24,18 +24,17 @@ Stellar account.
 The protocols which define how to deposit and withdraw are called SEPs.  
 Each SEP can be found in the [Stellar git repository](https://github.com/stellar/stellar-protocol/tree/master/ecosystem).
 The main focus of this document is to guide Wallets on how to manage deposits
-and withdrawals using TEMPO as the Anchor.  
+and withdrawals using a Stellar Anchor.
 The relevant SEPs for this document are listed [below](#3-seps).
 
 Here are a few links to help you get started:
 * [Stellar Introduction](https://developers.stellar.org/docs/start/introduction/)
 * [Stellar Tools](https://developers.stellar.org/docs/software-and-sdks/)
-* [SEP-24 Testing Tool](http://sep24.stellar.org/)
 * [Stellar Awesome Links](https://github.com/koltenb/awesome-stellar)
 * [Javascript Tutorial](https://blog.abuiles.com/building-your-own-venmo-with-stellar/)
-* [Validate EURT is working](https://anchor-validator.stellar.org/?home_domain=k.tempocrypto.com&currency=EURT&mainnet=true&project=SEP24)
 * [SEP-24 Instructions for Wallets](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md#basic-wallet-implementation)
 * [SEP-6 Instructions for Wallets](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md#basic-wallet-implementation)
+* [Anchor Validator](https://anchor-tests.stellar.org/)
 
 
 Overview of the steps to do a deposit or withdrawal using our Anchor:
@@ -86,9 +85,6 @@ Assets:
 * [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md): fully compliant
 * [SEP-31](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0031.md): being tested on testnet
 
-Notes:
-* SEP-6 can only be used after user document verification (KYC), either through SEP-24 or manual approval
-
 ## 4. Integrating
 
 ### 4.1. Fetch stellar.toml
@@ -110,7 +106,7 @@ stellar_toml = toml.loads(requests.get('https://clpx.finance/.well-known/stellar
 [SEP-10](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0010.md) provides a mechanism to
 prove ownership of a Stellar account and obtain a reusable JWT token which carries the ownership information.  
 The token is required in many transaction endpoints ([SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md), [SEP-6](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md), etc)
-and allow the Wallet to deposit and withdrawal funds on the account through TEMPO.  
+and allow the Wallet to deposit and withdrawal funds on the account through a Stellar Anchor.
 The token is usually valid for 1 day after it's generated, and can be used in all HTTP requests while it's valid.
 
 Python example (based on [Django Polaris code](https://github.com/stellar/django-polaris/blob/c2efcf4fc8da630ea76c19df7e9b80be671f90ef/polaris/polaris/tests/helpers.py#L15)) on how to get a new JWT token:
@@ -148,7 +144,7 @@ sep10_token = content['token']
 
 To deposit assets into a Stellar account, the account must first trust the asset.  
 A trustline operation is required only once and the trust will last forever on the account unless removed.  
-Python example on how to trust TEMPO's PURPLE asset (used for testnet transactions):
+Python example on how to trust an Anchor asset:
 ```python
 from stellar_sdk.server import Server
 from stellar_sdk.transaction_builder import TransactionBuilder
@@ -179,12 +175,10 @@ To create transactions, there are two options:
 * [SEP-6](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md)
   - Non-interactive - Wallet must provide all required information through HTTP requests
   - Does not require opening any external web page
-  - **Normally the account must be already verified (KYC approved) in order to allow SEP-6 operations.
-  An account can be verified through SEP-24 or manually approved by TEMPO.**
   - See [example](#sep-6-deposit-python-example) below
 * [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md)
-  - Interactive - all information needed from the user is collected by TEMPO using web pages
-  - Requires opening a popup window or iframe pointing to an URL provided by TEMPO
+  - Interactive - all information needed from the user is collected by the Anchor using web pages
+  - Requires opening a popup window or iframe pointing to an URL provided by the Anchor
   - See [example](#sep-24-deposit-python-example) below
 
 #### SEP-6 Deposit Python example:
@@ -194,7 +188,7 @@ def sep6_deposit():
         'asset_code': 'PURPLE',
         'account': 'GC75JLZ6...',
 
-        # these fields are specific for TEMPO,
+        # these fields are specific for this Anchor,
         #  they're specified on the SEP-6 /info endpoint
         'type': 'sepa',  # SEPA transfer deposit
         'first_name': 'John',
@@ -229,17 +223,15 @@ def sep24_deposit():
 
 Withdrawals are a way for users to obtain assets from their Stellar account as real world currencies (ex: USD, EUR).  
 For example, a user can have token balance in a Stellar account and withdraw that as fiat, receiving the fiat on a bank account outside Stellar.  
-To withdraw assets, the Wallet must create withdrawal transactions on TEMPO.  
+To withdraw assets, the Wallet must create withdrawal transactions on the Anchor.  
 To create transactions, there are two options:
 * [SEP-6](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0006.md)
   - Non-interactive - Wallet must provide all required information through API requests
   - Does not require opening any external web page
-  - **Normally the account to be already verified (KYC approved) in order to allow SEP-6 operations.
-  An account can be verified through SEP-24 or manually approved by TEMPO.**
   - See [example](#sep-6-withdrawal-python-example) below
 * [SEP-24](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0024.md)
-  - Interactive - all information needed from the user is collected by TEMPO using web pages
-  - Requires opening a popup window or iframe pointing to an URL provided by TEMPO
+  - Interactive - all information needed from the user is collected by the Anchor using web pages
+  - Requires opening a popup window or iframe pointing to an URL provided by the Anchor
   - See [example](#sep-24-withdrawal-python-example) below
 
 #### SEP-6 Withdrawal Python example:
@@ -295,7 +287,6 @@ With [SEP-31](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/
   - Used for anchor-anchor direct transfers
   - Non-interactive - Anchor must provide all required information through API requests
   - Does not require opening any external web page
-  - Originating stellar account must be pre-approved by TEMPO
   - See [example](#sep-31-python-example) below
 
 #### SEP-31 Python example:
